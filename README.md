@@ -1,2 +1,2 @@
 # pizzacesar
-mení digital
+menú digital
