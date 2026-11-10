@@ -619,7 +619,7 @@ exports.CheckoutForm = CheckoutForm;
 const react_1 = require("react");
 const order_message_1 = require("@/lib/order-message");
 const Icons_1 = require("./Icons");
-const initialData = { name: '', phone: '', address: '', delivery: 'moto', payment: 'cash' };
+const initialData = { name: '', phone: '', address: '', delivery: 'moto', payment: 'transfer' };
 function CheckoutForm({ lines }) {
     const [data, setData] = (0, react_1.useState)(initialData);
     const [prepared, setPrepared] = (0, react_1.useState)(false);
@@ -673,14 +673,8 @@ function CheckoutForm({ lines }) {
         React.createElement("fieldset", null,
             React.createElement("legend", null, "\u00BFC\u00F3mo prefer\u00EDs pagar?"),
             React.createElement("label", { className: "choice" },
-                React.createElement("input", { type: "radio", name: "payment", checked: data.payment === 'cash', onChange: () => update('payment', 'cash') }),
-                React.createElement("span", null, "Efectivo")),
-            React.createElement("label", { className: "choice" },
                 React.createElement("input", { type: "radio", name: "payment", checked: data.payment === 'transfer', onChange: () => update('payment', 'transfer') }),
-                React.createElement("span", null, "Transferencia")),
-            React.createElement("label", { className: "choice" },
-                React.createElement("input", { type: "radio", name: "payment", checked: data.payment === 'card', onChange: () => update('payment', 'card') }),
-                React.createElement("span", null, "Tarjeta"))),
+                React.createElement("span", null, "Transferencia"))),
         error && React.createElement("p", { className: "form-error", role: "alert" }, error),
         React.createElement("button", { className: "primary-button full-width checkout-submit", type: "submit" },
             "Preparar mi WhatsApp ",
@@ -898,9 +892,7 @@ const deliveryLabels = {
     pickup: 'Retiro en local',
 };
 const paymentLabels = {
-    cash: 'Efectivo',
     transfer: 'Transferencia',
-    card: 'Tarjeta',
 };
 function buildWhatsAppMessage(lines, data) {
     const products = lines
