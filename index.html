@@ -80,6 +80,11 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #2871
 .product-card h3{font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:27px;line-height:1.12;letter-spacing:-.035em;margin:0 0 12px}
 .ingredients{color:var(--muted);font-size:12px;line-height:1.7;margin:0 0 26px}
 .pending-copy{font-style:italic}
+.product-options{display:flex;flex-direction:column;gap:8px;margin:0 0 18px;padding-top:2px}
+.product-options label{font-size:10px;font-weight:800;color:var(--muted);display:flex;flex-direction:column;gap:5px}
+.product-options select{width:100%;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);padding:9px;font-size:11px}
+.product-options small{font-size:10px;color:var(--muted);line-height:1.4}
+.product-options strong{font-size:15px;color:var(--red-dark)}
 .product-actions{margin-top:auto}
 .add-button{display:flex;align-items:center;justify-content:space-between;width:100%;border:0;border-radius:10px;background:#f2ecdf;color:var(--ink);padding:12px 15px;font-weight:800;font-size:11px;min-height:44px;transition:background .15s}
 .add-button>span:last-child{font-size:21px;line-height:1}
@@ -476,6 +481,7 @@ function HomePage() {
     const [open, setOpen] = (0, react_1.useState)(false);
     const [notice, setNotice] = (0, react_1.useState)('');
     const visibleProducts = (0, react_1.useMemo)(() => category === 'Todos' ? products_1.products : products_1.products.filter((product) => product.category === category), [category]);
+    const pizzaOptions = products_1.products.filter((product) => product.prices && product.prices.large);
     const count = cart.reduce((sum, line) => sum + line.quantity, 0);
     (0, react_1.useEffect)(() => {
         if (!notice)
@@ -573,7 +579,7 @@ function HomePage() {
                 React.createElement("span", null,
                     visibleProducts.length,
                     " opciones")),
-            React.createElement(ProductGrid_1.ProductGrid, { products: visibleProducts, cart: cart, onAdd: add, onRemove: decrease }),
+            React.createElement(ProductGrid_1.ProductGrid, { products: visibleProducts, cart: cart, pizzaOptions: pizzaOptions, onAdd: add, onRemove: decrease }),
             React.createElement("p", { className: "catalog-note" }, "Los precios se confirman por WhatsApp. Tu pedido queda sujeto a confirmaci\u00F3n del local.")),
         React.createElement("section", { className: "closing-banner" },
             React.createElement("span", null,
@@ -699,6 +705,7 @@ exports.OrderDrawer = OrderDrawer;
 const react_1 = require("react");
 const CheckoutForm_1 = require("./CheckoutForm");
 const Icons_1 = require("./Icons");
+const formatPrice = (value) => '$' + value.toLocaleString('es-AR');
 function OrderDrawer({ lines, open, onOpenChange, onAdd, onRemove, onDelete, onClear }) {
     const dialog = (0, react_1.useRef)(null);
     const count = lines.reduce((total, line) => total + line.quantity, 0);
@@ -752,15 +759,16 @@ function OrderDrawer({ lines, open, onOpenChange, onAdd, onRemove, onDelete, onC
                 React.createElement("div", { className: "order-lines" }, lines.map((line) => React.createElement("div", { className: "order-line", key: line.product.id },
                     React.createElement("div", { className: "order-line-info" },
                         React.createElement("span", null, line.product.name),
+                        line.product.price != null && React.createElement("small", null, formatPrice(line.product.price) + " c/u"),
                         React.createElement("button", { className: "delete-line", type: "button", onClick: () => onDelete(line.product), "aria-label": 'Eliminar ' + line.product.name }, "Eliminar")),
                     React.createElement("div", { className: "line-quantity" },
                         React.createElement("button", { type: "button", onClick: () => onRemove(line.product), "aria-label": 'Quitar ' + line.product.name }, "\u2212"),
                         React.createElement("strong", null, line.quantity),
                         React.createElement("button", { type: "button", onClick: () => onAdd(line.product), "aria-label": 'Agregar ' + line.product.name }, "+"))))),
                 React.createElement("div", { className: "order-summary" },
-                    React.createElement("span", null, "Total de productos"),
-                    React.createElement("strong", null, count)),
-                React.createElement("p", { className: "price-note" }, "Los precios se confirman por WhatsApp."),
+                    React.createElement("span", null, "Total estimado"),
+                    React.createElement("strong", null, formatPrice(lines.reduce((total, line) => total + (line.product.price || 0) * line.quantity, 0)))),
+                React.createElement("p", { className: "price-note" }, "Los precios sin validar no se pueden sumar."),
                 React.createElement("button", { className: "clear-button", type: "button", onClick: onClear }, "Vaciar pedido"),
                 React.createElement(CheckoutForm_1.CheckoutForm, { lines: lines, onClose: () => onOpenChange(false) })))));
 }
@@ -770,7 +778,25 @@ factories["src/components/ProductCard"]=function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProductCard = ProductCard;
-function ProductCard({ product, quantity, onAdd, onRemove }) {
+const react_1 = require("react");
+const formatPrice = (value) => value == null ? 'Precio a confirmar' : '$' + value.toLocaleString('es-AR');
+function ProductCard({ product, quantity, onAdd, onRemove, pizzaOptions }) {
+    const isPizza = Boolean(product.prices && product.prices.large);
+    const [size, setSize] = (0, react_1.useState)(isPizza ? 'large' : 'dozen');
+    const [halfFlavorId, setHalfFlavorId] = (0, react_1.useState)('');
+    const halfFlavor = pizzaOptions.find((option) => option.id === halfFlavorId);
+    const selectedPrice = isPizza
+        ? (halfFlavor ? Math.max(product.prices[size], halfFlavor.prices[size]) : product.prices[size])
+        : product.prices ? product.prices[size] : null;
+    const configuredProduct = selectedPrice == null ? product : Object.assign(Object.assign({}, product), {
+        id: `${product.id}:${size}:${halfFlavorId || 'single'}`,
+        baseId: product.id,
+        name: isPizza
+            ? `${product.name}${halfFlavor ? ` mitad + ${halfFlavor.name} mitad` : ''} (${size === 'large' ? 'Grande' : 'Chica'})`
+            : `${product.name} (${size === 'dozen' ? 'Docena' : 'Media docena'})`,
+        price: selectedPrice,
+    });
+    const canAdd = !product.pricePending && selectedPrice != null;
     return (React.createElement("article", { className: 'product-card' + (quantity > 0 ? ' is-selected' : ''), "aria-label": product.name },
         React.createElement("div", { className: "product-card-topline" },
             React.createElement("span", { className: "product-tag" }, product.category),
@@ -778,10 +804,26 @@ function ProductCard({ product, quantity, onAdd, onRemove }) {
         React.createElement("img", { className: "product-image", src: product.image || ("data:image/webp;base64," + productImages[product.id]), alt: product.image ? product.name : "Pizza " + product.name, loading: "lazy", decoding: "async", width: 180, height: 180 }),
         React.createElement("h3", null, product.name),
         React.createElement("p", { className: 'ingredients' + (product.ingredientsPending ? ' pending-copy' : '') }, product.ingredientsPending ? 'Ingredientes pendientes de confirmar con el local.' : product.ingredients.join(' · ')),
+        product.pricePending ? React.createElement("p", { className: "price-note" }, "Precio pendiente de validar.") : product.prices && React.createElement("div", { className: "product-options" },
+            React.createElement("label", null,
+                isPizza ? "Tama\u00F1o" : "Presentaci\u00F3n",
+                React.createElement("select", { value: size, onChange: (event) => setSize(event.target.value) },
+                    isPizza ? React.createElement(React.Fragment, null,
+                        React.createElement("option", { value: "large" }, "Grande — " + formatPrice(product.prices.large)),
+                        React.createElement("option", { value: "small" }, "Chica — " + formatPrice(product.prices.small))) : React.createElement(React.Fragment, null,
+                        React.createElement("option", { value: "dozen" }, "Docena — " + formatPrice(product.prices.dozen)),
+                        React.createElement("option", { value: "halfDozen" }, "Media docena — " + formatPrice(product.prices.halfDozen))))),
+            isPizza && React.createElement("label", null,
+                "Segundo sabor (opcional)",
+                React.createElement("select", { value: halfFlavorId, onChange: (event) => setHalfFlavorId(event.target.value) },
+                    React.createElement("option", { value: "" }, "Un solo sabor"),
+                    pizzaOptions.filter((option) => option.id !== product.id).map((option) => React.createElement("option", { key: option.id, value: option.id }, option.name)))),
+            isPizza && halfFlavor && React.createElement("small", null, "Mitad y mitad: se cobra el sabor m\u00E1s caro."),
+            React.createElement("strong", null, formatPrice(selectedPrice))),
         React.createElement("div", { className: "product-actions" }, quantity > 0 ? React.createElement("div", { className: "quantity-control", "aria-label": 'Cantidad de ' + product.name },
             React.createElement("button", { type: "button", onClick: onRemove, "aria-label": 'Quitar una ' + product.name }, "−"),
             React.createElement("span", null, React.createElement("strong", null, quantity), " en tu pedido"),
-            React.createElement("button", { type: "button", onClick: onAdd, "aria-label": 'Agregar otra ' + product.name }, "+")) : React.createElement("button", { className: "add-button", type: "button", onClick: onAdd, "aria-label": 'Agregar ' + product.name + ' al pedido' },
+            React.createElement("button", { type: "button", onClick: () => onAdd(configuredProduct), "aria-label": 'Agregar otra ' + product.name }, "+")) : React.createElement("button", { className: "add-button", type: "button", onClick: () => onAdd(configuredProduct), disabled: !canAdd, "aria-label": 'Agregar ' + product.name + ' al pedido' },
             React.createElement("span", null, "Sumar al pedido"),
             React.createElement("span", { "aria-hidden": "true" }, "+")))));
 }
@@ -792,10 +834,10 @@ factories["src/components/ProductGrid"]=function(require,module,exports){
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProductGrid = ProductGrid;
 const ProductCard_1 = require("./ProductCard");
-function ProductGrid({ products, cart, onAdd, onRemove }) {
+function ProductGrid({ products, cart, onAdd, onRemove, pizzaOptions }) {
     return (React.createElement("div", { className: "product-grid" }, products.map((product) => {
-        var _a, _b;
-        return (React.createElement(ProductCard_1.ProductCard, { key: product.id, product: product, quantity: (_b = (_a = cart.find((line) => line.product.id === product.id)) === null || _a === void 0 ? void 0 : _a.quantity) !== null && _b !== void 0 ? _b : 0, onAdd: () => onAdd(product), onRemove: () => onRemove(product) }));
+        const quantity = cart.filter((line) => (line.product.baseId || line.product.id) === product.id).reduce((sum, line) => sum + line.quantity, 0);
+        return (React.createElement(ProductCard_1.ProductCard, { key: product.id, product: product, quantity: quantity, pizzaOptions: pizzaOptions, onAdd: onAdd, onRemove: () => onRemove(Object.assign(Object.assign({}, product), { baseId: product.id })) }));
     })));
 }
 
@@ -848,6 +890,49 @@ exports.products = [
     { id: 'calzone', name: 'Calzone', category: 'Otros', ingredients: [], ingredientsPending: true },
     { id: 'pizza-rellena', name: 'Pizza rellena', category: 'Otros', ingredients: [], ingredientsPending: true },
 ];
+const pizzaPrices = {
+    muzzarella: [17000, 11000],
+    'muzzarella-jamon': [19000, 12000],
+    'muzzarella-jamon-morrones': [21000, 13000],
+    'muzzarella-jamon-provolone': [21000, 13000],
+    'muzzarella-anchoas': [23000, 14000],
+    'muzzarella-huevo': [19000, 12000],
+    calabresa: [21000, 13000],
+    roquefort: [19000, 12000],
+    provolone: [19000, 12000],
+    'cuatro-quesos': [23000, 14000],
+    napolitana: [22000, 13000],
+    'napolitana-jamon': [24000, 16000],
+    fugazza: [17000, 11000],
+    fugazzeta: [22000, 13000],
+    'fugazzeta-jamon': [23000, 14000],
+    'fugazzeta-provolone': [23000, 14000],
+    'fugazzeta-roquefort': [23000, 14000],
+    'jamon-morron-huevo': [25000, 16000],
+    'napolitana-huevo': [23000, 14000],
+    champinones: [24000, 15000],
+    provenzal: [17000, 11000],
+    anana: [22000, 14000],
+    'anana-jamon': [25000, 16000],
+    palmitos: [25000, 16000],
+    'palmitos-jamon': [28000, 17000],
+    'palmitos-jamon-tomates': [30000, 18000],
+    capresse: [24000, 14000],
+    mediterranea: [24000, 14000],
+    'mediterranea-champinones': [30000, 18000],
+    carne: [23000, 15000],
+    rucula: [19000, 14000],
+    'rucula-jamon-cocido': [22000, 15000],
+    'rucula-jamon-crudo': [25000, 16000],
+};
+exports.products.forEach((item) => {
+    if (pizzaPrices[item.id])
+        item.prices = { large: pizzaPrices[item.id][0], small: pizzaPrices[item.id][1] };
+    if (item.category === 'Empanadas')
+        item.prices = { halfDozen: 12000, dozen: 24000 };
+    else if (!pizzaPrices[item.id])
+        item.pricePending = true;
+});
 
 };
 factories["src/lib/cart"]=function(require,module,exports){
@@ -862,12 +947,14 @@ function addProduct(lines, product) {
         : [...lines, { product, quantity: 1 }];
 }
 function decreaseProduct(lines, product) {
-    return lines.flatMap((line) => line.product.id === product.id
+    const baseId = product.baseId || product.id;
+    return lines.flatMap((line) => (line.product.baseId || line.product.id) === baseId
         ? (line.quantity > 1 ? [Object.assign(Object.assign({}, line), { quantity: line.quantity - 1 })] : [])
         : [line]);
 }
 function removeProduct(lines, product) {
-    return lines.filter((line) => line.product.id !== product.id);
+    const baseId = product.baseId || product.id;
+    return lines.filter((line) => (line.product.baseId || line.product.id) !== baseId);
 }
 
 };
@@ -885,7 +972,7 @@ const paymentLabels = {
 };
 function buildWhatsAppMessage(lines, data) {
     const products = lines
-        .map(({ product, quantity }) => `- ${product.name} x${quantity}`)
+        .map(({ product, quantity }) => `- ${product.name} x${quantity}${product.price != null ? ` — $${(product.price * quantity).toLocaleString('es-AR')}` : ''}`)
         .join('\n');
     const address = data.delivery === 'moto' ? `\nDirección: ${data.address}` : '';
     return [
