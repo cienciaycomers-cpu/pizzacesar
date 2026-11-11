@@ -144,10 +144,6 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #2871
 .checkout-submit{background:var(--red);margin-top:6px;width:100%}
 .checkout-note{font-size:10px;color:var(--muted);text-align:center;line-height:1.6;margin:-9px 0 0}
 .form-error{background:#ffe3dc;border-radius:8px;padding:12px;font-size:12px;line-height:1.5;color:#8e1714;margin:0}
-.message-preview{background:var(--ink);border-radius:14px;padding:22px;color:var(--cream)}
-.message-preview .eyebrow{color:var(--yellow)}
-.message-preview pre{font:12px/1.8 Arial,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}
-.message-preview p{font-size:10px;line-height:1.7;color:#d6ccbe;border-top:1px solid #62564a;padding-top:12px}
 @media(min-width:1441px){.hero{padding-left:88px;padding-right:88px}}
 @media(max-width:1350px){.catalog-section{margin:0 38px}.hero{padding-left:38px;padding-right:38px}.service-strip{gap:25px}.service-strip span+span:before{margin-right:25px}}
 @media(max-width:1000px){.hero{min-height:530px;padding-top:42px;padding-bottom:44px}.hero h1{font-size:80px}.hero .eyebrow{font-size:8px}.hero p{font-size:14px;max-width:320px}.hero-footnote{gap:14px;font-size:8px}.pizza-box{padding:12px 15px 22px;margin-left:0;margin-right:16px}.pizza-disc{border-width:10px;width:88%}.hero-sticker{width:87px;height:87px;right:-10px;top:5px}.hero-sticker strong{font-size:34px}.hero-sticker span{font-size:9px}.box-bottom{font-size:6px}.product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.service-strip{gap:20px;font-size:9px;letter-spacing:.04em}.service-strip span+span:before{margin-right:15px}}
@@ -622,12 +618,9 @@ const Icons_1 = require("./Icons");
 const initialData = { name: '', phone: '', address: '', delivery: 'moto', payment: 'transfer' };
 function CheckoutForm({ lines }) {
     const [data, setData] = (0, react_1.useState)(initialData);
-    const [prepared, setPrepared] = (0, react_1.useState)(false);
     const [error, setError] = (0, react_1.useState)('');
-    const message = prepared ? (0, order_message_1.buildWhatsAppMessage)(lines, data) : '';
     const update = (key, value) => {
         setData((current) => (Object.assign(Object.assign({}, current), { [key]: value })));
-        setPrepared(false);
         setError('');
     };
     const submit = (event) => {
@@ -644,7 +637,7 @@ function CheckoutForm({ lines }) {
             setError('Completá la dirección de entrega.');
             return;
         }
-        setPrepared(true);
+        window.location.href = (0, order_message_1.buildWhatsAppUrl)('5493764130326', (0, order_message_1.buildWhatsAppMessage)(lines, data));
     };
     return (React.createElement("form", { className: "checkout-form", onSubmit: submit },
         React.createElement("div", { className: "checkout-heading" },
@@ -677,13 +670,9 @@ function CheckoutForm({ lines }) {
                 React.createElement("span", null, "Transferencia"))),
         error && React.createElement("p", { className: "form-error", role: "alert" }, error),
         React.createElement("button", { className: "primary-button full-width checkout-submit", type: "submit" },
-            "Preparar mi WhatsApp ",
+            "Enviar pedido por WhatsApp ",
             React.createElement(Icons_1.ArrowIcon, null)),
-        React.createElement("p", { className: "checkout-note" }, "El local confirma disponibilidad y precios por WhatsApp."),
-        message && React.createElement("section", { className: "message-preview", "aria-label": "Mensaje de WhatsApp preparado", "aria-live": "polite" },
-            React.createElement("span", { className: "eyebrow" }, "Tu mensaje est\u00E1 listo"),
-            React.createElement("pre", null, message),
-            React.createElement("p", null, "Vista previa: no se abre ni se env\u00EDa WhatsApp. Falta configurar el n\u00FAmero oficial del local."))));
+        React.createElement("p", { className: "checkout-note" }, "Se abrir\u00E1 WhatsApp con tu pedido.")));
 }
 
 };
@@ -913,7 +902,7 @@ function buildWhatsAppMessage(lines, data) {
     ].join('\n');
 }
 function buildWhatsAppUrl(number, message) {
-    return `https://wa.me/${number.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+    return `https://api.whatsapp.com/send/?phone=${number.replace(/\D/g, '')}&text=${encodeURIComponent(message)}&type=phone_number&app_absent=0`;
 }
 
 };
