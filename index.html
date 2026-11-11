@@ -580,7 +580,7 @@ function HomePage() {
                     visibleProducts.length,
                     " opciones")),
             React.createElement(ProductGrid_1.ProductGrid, { products: visibleProducts, cart: cart, pizzaOptions: pizzaOptions, onAdd: add, onRemove: decrease }),
-            React.createElement("p", { className: "catalog-note" }, "Los precios se confirman por WhatsApp. Tu pedido queda sujeto a confirmaci\u00F3n del local.")),
+            React.createElement("p", { className: "catalog-note" }, "Tu pedido queda sujeto a confirmaci\u00F3n del local.")),
         React.createElement("section", { className: "closing-banner" },
             React.createElement("span", null,
                 "PARA VOS.",
@@ -764,9 +764,9 @@ function OrderDrawer({ lines, open, onOpenChange, onAdd, onRemove, onDelete, onC
                         React.createElement("strong", null, line.quantity),
                         React.createElement("button", { type: "button", onClick: () => onAdd(line.product), "aria-label": 'Agregar ' + line.product.name }, "+"))))),
                 React.createElement("div", { className: "order-summary" },
-                    React.createElement("span", null, "Total estimado"),
+                    React.createElement("span", null, "Total de productos"),
                     React.createElement("strong", null, count)),
-                React.createElement("p", { className: "price-note" }, "Los precios se confirman por WhatsApp."),
+                React.createElement("p", { className: "price-note" }, "El local confirma disponibilidad y detalles por WhatsApp."),
                 React.createElement("button", { className: "clear-button", type: "button", onClick: onClear }, "Vaciar pedido"),
                 React.createElement(CheckoutForm_1.CheckoutForm, { lines: lines, onClose: () => onOpenChange(false) })))));
 }
